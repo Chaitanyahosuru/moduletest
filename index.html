@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cryptocurrency Dashboard</title>
+  <style>
+    /* Basic styling for the table and inputs */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    input[type="text"] {
+      padding: 8px;
+      margin-bottom: 20px;
+      width: 300px;
+    }
+    button {
+      padding: 8px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cryptocurrency Dashboard</h1>
+  
+  <!-- Search and Sort UI -->
+  <input type="text" id="searchInput" placeholder="Search for a coin..." oninput="searchCoins()">
+  <button onclick="sortByMarketCap()">Sort by Market Cap</button>
+  <button onclick="sortByPercentageChange()">Sort by % Change</button>
+  
+  <!-- Table to display cryptocurrency data -->
+  <table id="cryptoTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Image</th>
+        <th>Symbol</th>
+        <th>Current Price</th>
+        <th>Total Volume</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Data rows will be dynamically populated here -->
+    </tbody>
+  </table>
+
+  <script>
+    // Define the API URL
+const apiUrl = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false';
+
+// Global variable to hold the coin data
+let coinData = [];
+
+// Function to fetch data using .then
+function fetchDataWithThen() {
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            coinData = data;
+            renderTable(coinData); // Render table with data
+        })
+        .catch(error => console.error('Error fetching data:', error));
+}
+
+// Function to fetch data using async/await
+async function fetchDataWithAsyncAwait() {
+    try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        coinData = data;
+        renderTable(coinData); // Render table with data
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+// Render the table with data
+function renderTable(data) {
+    const tableBody = document.getElementById('table-body');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    data.forEach(coin => {
+        const row = document.createElement('tr');
+        
+        const nameCell = document.createElement('td');
+        nameCell.textContent = coin.name;
+        
+        const imageCell = document.createElement('td');
+        const img = document.createElement('img');
+        img.src = coin.image;
+        img.alt = coin.name;
+        img.width = 30;
+        img.height = 30;
+        imageCell.appendChild(img);
+        
+        const symbolCell = document.createElement('td');
+        symbolCell.textContent = coin.symbol;
+        
+        const priceCell = document.createElement('td');
+        priceCell.textContent = `$${coin.current_price.toFixed(2)}`;
+        
+        const volumeCell = document.createElement('td');
+        volumeCell.textContent = coin.total_volume.toLocaleString();
+        
+        const marketCapCell = document.createElement('td');
+        marketCapCell.textContent = `$${coin.market_cap.toLocaleString()}`;
+        
+        const percentChangeCell = document.createElement('td');
+        percentChangeCell.textContent = `${coin.price_change_percentage_24h.toFixed(2)}%`;
+        
+        row.append(nameCell, imageCell, symbolCell, priceCell, volumeCell, marketCapCell, percentChangeCell);
+        tableBody.appendChild(row);
+    });
+}
+
+// Search functionality
+function searchData() {
+    const searchInput = document.getElementById('search-input').value.toLowerCase();
+    const filteredData = coinData.filter(coin => 
+        coin.name.toLowerCase().includes(searchInput) || 
+        coin.symbol.toLowerCase().includes(searchInput)
+    );
+    renderTable(filteredData);
+}
+
+// Sort data by market cap
+function sortByMarketCap() {
+    const sortedData = [...coinData].sort((a, b) => b.market_cap - a.market_cap);
+    renderTable(sortedData);
+}
+
+// Sort data by percentage change
+function sortByPercentageChange() {
+    const sortedData = [...coinData].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+    renderTable(sortedData);
+}
+
+// Event listeners for search and sort buttons
+document.getElementById('search-button').addEventListener('click', searchData);
+document.getElementById('sort-marketcap-button').addEventListener('click', sortByMarketCap);
+document.getElementById('sort-percentage-button').addEventListener('click', sortByPercentageChange);
+
+// Fetch data initially using one method (you can switch between fetchDataWithThen or fetchDataWithAsyncAwait)
+fetchDataWithThen(); // You can also use fetchDataWithAsyncAwait() instead
+
+  </script>
+</body>
+</html>
